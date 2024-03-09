@@ -312,19 +312,8 @@ impl Scans {
         Ok(res.get("result").unwrap().clone())
     }
 
-    // fetch the current price of a cryptocurrency in USD from the Coingecko API
-    pub async fn fetch_price(&self, pair: &str) -> Result<f64, reqwest::Error> {
-        let url = format!(
-            "{}/simple/price?ids={}&vs_currencies=usd",
-            Self::BASE_COINGECKO_API_URL, pair
-        );
-        let res = reqwest::get(&url)
-            .await?
-            .json::<HashMap<String, HashMap<String, f64>>>()
-            .await?;
-        Ok(res.get(pair).unwrap().get("usd").unwrap().clone())
-    }
 
+	// SOLANA FM - ACCOUNTS MODULE
     pub async fn get_solana_multiple_accounts(
         &self,
         addresses: Vec<String>,
@@ -342,4 +331,29 @@ impl Scans {
             .await?;
         Ok(res.clone())
     }
+
+	// COINGECKO
+	pub async fn cg_ping(&self) -> Result<HashMap<String, String>, reqwest::Error> {
+		let url = format!(
+			"{}/ping",
+			Self::BASE_COINGECKO_API_URL
+		);
+		let res = reqwest::get(&url)
+			.await?
+			.json::<HashMap<String, String>>()
+			.await?;
+		Ok(res.clone())
+	}
+
+	pub async fn fetch_price(&self, pair: &str) -> Result<HashMap<String, HashMap<String, f64>>, reqwest::Error> {
+		let url = format!(
+			"{}/simple/price?ids={}&vs_currencies=usd",
+			Self::BASE_COINGECKO_API_URL, pair
+		);
+		let res = reqwest::get(&url)
+			.await?
+			.json::<HashMap<String, HashMap<String, f64>>>()
+			.await?;
+		Ok(res.clone())
+	}
 }
