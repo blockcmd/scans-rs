@@ -255,6 +255,14 @@ pub struct EtherscanBeaconChainWithdrawals {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EtherscanHistoricalEtherBalanceForSingleAddressByBlockNumberApiResponse {
+	pub status: String,
+	pub message: String,
+	pub result: String,
+}
+
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AccountsBalances {
     pub account: String,
     pub balance: String,
@@ -601,6 +609,25 @@ impl Scans {
 			self.api_keys
 		);
 		let res = reqwest::get(&url).await?.json::<EtherscanListBeaconChainWithdrawalsByAddressAndBlockRangeApiResponse>().await?;
+		Ok(res.clone())
+	}
+
+
+	/// Get Historical Ether Balance for a Single Address By BlockNo
+	pub async fn get_historical_ether_balance_for_single_address_by_block_number(
+		&self,
+		chain_id: &str,
+		address: &str,
+		blockno: i128,
+	) -> Result<EtherscanHistoricalEtherBalanceForSingleAddressByBlockNumberApiResponse, reqwest::Error> {
+		let url: String = format!(
+			"{}?module=account&action=balancehistory&address={}&blockno={}&apikey={}",
+			Self::select_chain(chain_id),
+			address,
+			blockno,
+			self.api_keys
+		);
+		let res = reqwest::get(&url).await?.json::<EtherscanHistoricalEtherBalanceForSingleAddressByBlockNumberApiResponse>().await?;
 		Ok(res.clone())
 	}
 
