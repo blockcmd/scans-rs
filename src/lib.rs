@@ -236,6 +236,23 @@ pub struct EtherscanBlockValidated {
 	pub blockReward: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EtherscanListBeaconChainWithdrawalsByAddressAndBlockRangeApiResponse {
+	pub status: String,
+	pub message: String,
+	pub result: Vec<EtherscanBeaconChainWithdrawals>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(non_snake_case)]
+pub struct EtherscanBeaconChainWithdrawals {
+	pub withdrawalIndex: String,
+	pub validatorIndex: String,
+	pub address: String,
+	pub amount: String,
+	pub blockNumber: String,
+	pub timestamp: String
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AccountsBalances {
@@ -556,6 +573,34 @@ impl Scans {
 			self.api_keys
 		);
 		let res = reqwest::get(&url).await?.json::<EtherscanListBlocksValidatedByAddressApiResponse>().await?;
+		Ok(res.clone())
+	}
+
+
+	/// Get Beacon Chain Withdrawals by Address and Block Range
+	pub async fn get_beacon_chain_withdrawals_by_address_and_block_range(
+		&self,
+		chain_id: &str,
+		address: &str,
+		startblock: i128,
+		endblock: i128,
+		page: i128,
+		offset: i128,
+		sort: &str,
+	) -> Result<EtherscanListBeaconChainWithdrawalsByAddressAndBlockRangeApiResponse, reqwest::Error> {
+
+		let url: String = format!(
+			"{}?module=account&action=txsBeaconWithdrawal&address={}&startblock={}&endblock={}&page={}&offset={}&sort={}&apikey={}",
+			Self::select_chain(chain_id),
+			address,
+			startblock,
+			endblock,
+			page,
+			offset,
+			sort,
+			self.api_keys
+		);
+		let res = reqwest::get(&url).await?.json::<EtherscanListBeaconChainWithdrawalsByAddressAndBlockRangeApiResponse>().await?;
 		Ok(res.clone())
 	}
 
