@@ -221,6 +221,21 @@ pub struct EtherscanErc1155TokenTransferEvents {
 	pub confirmations: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EtherscanListBlocksValidatedByAddressApiResponse {
+	pub status: String,
+	pub message: String,
+	pub result: Vec<EtherscanBlockValidated>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(non_snake_case)]
+pub struct EtherscanBlockValidated {
+	pub blockNumber: String,
+	pub timeStamp: String,
+	pub blockReward: String,
+}
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AccountsBalances {
@@ -519,7 +534,33 @@ impl Scans {
 		Ok(res.clone())
 	}
 
-	// ETHERSCAN - TOKENS MODULE
+	/// Get list of Blocks Validated by Address
+	pub async fn get_blocks_validated_by_address(
+		&self,
+		chain_id: &str,
+		address: &str,
+		blocktype: &str,
+		page: i128,
+		offset: i128,
+		sort: &str,
+	) -> Result<EtherscanListBlocksValidatedByAddressApiResponse, reqwest::Error> {
+
+		let url: String = format!(
+			"{}?module=account&action=getminedblocks&address={}&blocktype={}&page={}&offset={}&sort={}&apikey={}",
+			Self::select_chain(chain_id),
+			address,
+			blocktype,
+			page,
+			offset,
+			sort,
+			self.api_keys
+		);
+		let res = reqwest::get(&url).await?.json::<EtherscanListBlocksValidatedByAddressApiResponse>().await?;
+		Ok(res.clone())
+	}
+
+
+	/// ETHERSCAN - TOKENS MODULE
     pub async fn get_token_balance(
         &self,
         chain_id: &str,
@@ -535,7 +576,7 @@ impl Scans {
     }
 
 
-	// SOLANA FM - ACCOUNTS MODULE
+	/// SOLANA FM - ACCOUNTS MODULE
     pub async fn get_solana_multiple_accounts(
         &self,
         addresses: Vec<String>,
