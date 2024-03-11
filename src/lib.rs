@@ -79,7 +79,7 @@ pub struct EtherscanInternalTransaction {
 pub struct EtherscanListInternalTransactionsByTransactionHashApiResponse {
 	pub status: String,
 	pub message: String,
-	pub result: Vec<EtherscanInternalTransaction>,
+	pub result: Vec<EtherscanInternalTransactionWithoutHash>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -98,6 +98,127 @@ pub struct EtherscanInternalTransactionWithoutHash {
 	pub gasUsed: String,
 	pub isError: String,
 	pub errCode: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(non_snake_case)]
+pub struct EtherscanInternalTransactionByBlockRangeApiResponse {
+	pub status: String,
+	pub message: String,
+	pub result: Vec<EtherscanInternalTransactionInBlockRange>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(non_snake_case)]
+pub struct EtherscanInternalTransactionInBlockRange {
+	pub blockNumber: String,
+	pub timeStamp: String,
+	pub hash: String,
+	pub from: String,
+	pub to: String,
+	pub value: String,
+	pub contractAddress: String,
+	pub input: String,
+	#[serde(rename = "type")]
+	pub type_: String,
+	pub gas: String,
+	pub gasUsed: String,
+	pub traceId: String,
+	pub isError: String,
+	pub errCode: String
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EtherscanListErc20TokenTransfersByAddressApiResponse {
+	pub status: String,
+	pub message: String,
+	pub result: Vec<EtherscanErc20TokenTransferEvents>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(non_snake_case)]
+pub struct EtherscanErc20TokenTransferEvents {
+	pub blockNumber: String,
+	pub timeStamp: String,
+	pub hash: String,
+	pub nonce: String,
+	pub blockHash: String,
+	pub from: String,
+	pub contractAddress: String,
+	pub to: String,
+	pub value: String,
+	pub tokenName: String,
+	pub tokenSymbol: String,
+	pub tokenDecimal: String,
+	pub transactionIndex: String,
+	pub gas: String,
+	pub gasPrice: String,
+	pub gasUsed: String,
+	pub cumulativeGasUsed: String,
+	pub input: String,
+	pub confirmations: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EtherscanListErc721TokenTransfersByAddressApiResponse {
+	pub status: String,
+	pub message: String,
+	pub result: Vec<EtherscanErc721TokenTransferEvents>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(non_snake_case)]
+pub struct EtherscanErc721TokenTransferEvents {
+	pub blockNumber: String,
+	pub timeStamp: String,
+	pub hash: String,
+	pub nonce: String,
+	pub blockHash: String,
+	pub from: String,
+	pub contractAddress: String,
+	pub to: String,
+	pub tokenID: String,
+	pub tokenName: String,
+	pub tokenSymbol: String,
+	pub tokenDecimal: String,
+	pub transactionIndex: String,
+	pub gas: String,
+	pub gasPrice: String,
+	pub gasUsed: String,
+	pub cumulativeGasUsed: String,
+	pub input: String,
+	pub confirmations: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EtherscanListErc1155TokenTransfersByAddressApiResponse {
+	pub status: String,
+	pub message: String,
+	pub result: Vec<EtherscanErc1155TokenTransferEvents>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(non_snake_case)]
+pub struct EtherscanErc1155TokenTransferEvents {
+	pub blockNumber: String,
+	pub timeStamp: String,
+	pub hash: String,
+	pub nonce: String,
+	pub blockHash: String,
+	pub transactionIndex: String,
+	pub gas: String,
+	pub gasPrice: String,
+	pub gasUsed: String,
+	pub cumulativeGasUsed: String,
+	pub input: String,
+	pub contractAddress: String,
+	pub from: String,
+	pub to: String,
+	pub tokenID: String,
+	pub tokenValue: String,
+	pub tokenName: String,
+	pub tokenSymbol: String,
+	pub confirmations: String,
 }
 
 
@@ -179,7 +300,8 @@ impl Scans {
         }
     }
 
-    // ETHERSCAN - ACCOUNTS MODULE
+    /// ETHERSCAN - ACCOUNTS MODULE
+	/// Get Ether Balance for a Single Address
     pub async fn get_account_balance(
         &self,
         chain_id: &str,
@@ -198,6 +320,7 @@ impl Scans {
         Ok(res.clone())
     }
 
+	/// Get Ether Balance for Multiple Addresses in a Single Call
     pub async fn get_multiple_accounts_balances(
         &self,
         chain_id: &str,
@@ -213,6 +336,7 @@ impl Scans {
         Ok(res.clone())
     }
 
+	/// Get a list of 'Normal' Transactions By Address
 	pub async fn get_normal_transactions_by_address(
 		&self,
 		chain_id: &str,
@@ -239,6 +363,7 @@ impl Scans {
 		Ok(res.clone())
 	}
 
+	/// Get a list of 'Internal' Transactions by Address
 	pub async fn get_internal_transactions_by_address(
 		&self,
 		chain_id: &str,
@@ -265,6 +390,7 @@ impl Scans {
 		Ok(res.clone())
 	}
 
+	/// Get 'Internal Transactions' by Transaction Hash
 	pub async fn get_internal_transactions_by_tx_hash(
 		&self,
 		chain_id: &str,
@@ -281,19 +407,115 @@ impl Scans {
 		Ok(res.clone())
 	}
 
+	/// Get "Internal Transactions" by Block Range
 	pub async fn get_internal_transactions_by_block_range(
 		&self,
 		chain_id: &str,
-		tx_hash: &str,
-	) -> Result<EtherscanListInternalTransactionsByTransactionHashApiResponse, reqwest::Error> {
+		page: i128,
+		offset: i128,
+		startblock: i128,
+		endblock: i128,
+		sort: &str,
+	) -> Result<EtherscanInternalTransactionByBlockRangeApiResponse, reqwest::Error> {
 
 		let url: String = format!(
-			"{}?module=account&action=txlistinternal&txhash={}&apikey={}",
+			"{}?module=account&action=txlistinternal&startblock={}&endblock={}&page={}&offset={}&sort={}&apikey={}",
 			Self::select_chain(chain_id),
-			tx_hash,
+			page,
+			offset,
+			startblock,
+			endblock,
+			sort,
 			self.api_keys
 		);
-		let res = reqwest::get(&url).await?.json::<EtherscanListInternalTransactionsByTransactionHashApiResponse>().await?;
+		let res = reqwest::get(&url).await?.json::<EtherscanInternalTransactionByBlockRangeApiResponse>().await?;
+		Ok(res.clone())
+	}
+
+	/// Get a list of 'ERC20 - Token Transfer Events' by Address
+	pub async fn get_erc20_transfer_events_by_address(
+		&self,
+		chain_id: &str,
+		address: &str,
+		contractaddress: &str,
+		page: i128,
+		offset: i128,
+		startblock: i128,
+		endblock: i128,
+		sort: &str,
+	) -> Result<EtherscanListErc20TokenTransfersByAddressApiResponse, reqwest::Error> {
+
+		let url: String = format!(
+			"{}?module=account&action=tokentx&contractaddress={}&address={}&page={}&offset={}&startblock{}&endblock={}&sort={}&apikey={}",
+			Self::select_chain(chain_id),
+			contractaddress,
+			address,
+			page,
+			offset,
+			startblock,
+			endblock,
+			sort,
+			self.api_keys
+		);
+		let res = reqwest::get(&url).await?.json::<EtherscanListErc20TokenTransfersByAddressApiResponse>().await?;
+		Ok(res.clone())
+	}
+
+	/// Get a list of 'ERC721 - Token Transfer Events' by Address
+	pub async fn get_erc721_transfer_events_by_address(
+		&self,
+		chain_id: &str,
+		address: &str,
+		contractaddress: &str,
+		page: i128,
+		offset: i128,
+		startblock: i128,
+		endblock: i128,
+		sort: &str,
+	) -> Result<EtherscanListErc721TokenTransfersByAddressApiResponse, reqwest::Error> {
+
+		let url: String = format!(
+			"{}?module=account&action=tokennfttx&contractaddress={}&address={}&page={}&offset={}&startblock{}&endblock={}&sort={}&apikey={}",
+			Self::select_chain(chain_id),
+			contractaddress,
+			address,
+			page,
+			offset,
+			startblock,
+			endblock,
+			sort,
+			self.api_keys
+		);
+		let res = reqwest::get(&url).await?.json::<EtherscanListErc721TokenTransfersByAddressApiResponse>().await?;
+		Ok(res.clone())
+	}
+
+	/// Get a list of 'ERC1155 - Token Transfer Events' by Address
+	pub async fn get_erc1155_transfer_events_by_address(
+		&self,
+		chain_id: &str,
+		address: &str,
+		contractaddress: &str,
+		page: i128,
+		offset: i128,
+		startblock: i128,
+		endblock: i128,
+		sort: &str,
+	) -> Result<EtherscanListErc721TokenTransfersByAddressApiResponse, reqwest::Error> {
+
+		let url: String = format!(
+			"{}?module=account&action=token1155tx&contractaddress={}&address={}&page={}&offset={}&startblock{}&endblock={}&sort={}&apikey={}",
+			Self::select_chain(chain_id),
+			contractaddress,
+			address,
+			page,
+			offset,
+			startblock,
+			endblock,
+			sort,
+			self.api_keys
+		);
+		let res = reqwest::get(&url).await?.json::<EtherscanListErc721TokenTransfersByAddressApiResponse>().await?;
 		Ok(res.clone())
 	}
 
